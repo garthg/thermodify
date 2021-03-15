@@ -36,7 +36,6 @@ try:
     temp_f = temp_c*180./100.+32.
     logging.info(f'Temperature in fahrenheit: {temp_f}')
     print(f'\n  --> {temp_f} deg F <--\n')
-    logging.info(f'Loaded temperature min/max from conf: {temp_min} - {temp_max}')
 except KeyboardInterrupt: raise KeyboardInterrupt
 except SystemExit: raise SystemExit
 except Exception as e:
@@ -50,10 +49,10 @@ logging.info(f'Loaded kasa plug alias from conf: {kasa_plug_alias}')
 kasa_command_prefix = f'kasa --alias "{kasa_plug_alias}" --plug '
 if temp_max and (problem or temp_f >= temp_max):
     logging.info('Attempting to turn off...')
-    assert(os.system(kasa_command_prefix+'off'))
+    logging.info(os.system(kasa_command_prefix+'off'))
 if temp_min and temp_f <= temp_min:
     logging.info('Attempting to turn on...')
-    assert(os.system(kasa_command_prefix+'on'))
+    logging.info(os.system(kasa_command_prefix+'on'))
 logging.info('Querying plug status at end...')
 os.system(kasa_command_prefix)
 logging.info('Done')
