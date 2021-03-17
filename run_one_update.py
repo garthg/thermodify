@@ -9,15 +9,20 @@ from datetime import datetime
 from ruuvitag_sensor.ruuvi import RuuviTagSensor
 
 
-def within_hour_bounds(hour_start, hour_end):
+def hour_within_bounds(hour_target, hour_start, hour_end):
+    if hour_start == hour_end:
+        return True
+    if hour_end > hour_start:
+        return (hour_target >= hour_start and hour_target <= hour_end)
+    else:
+        return not (hour_target >= hour_end and hour_target <= hour_start)
+
+def current_within_hour_bounds(hour_start, hour_end):
     local_now = datetime.now()
     logging.info(f'Current time: {local_now}')
     local_hour = local_now.hour
     logging.info(f'Assess {local_hour} between {hour_start} - {hour_end}')
-    if hour_end > hour_start:
-        return (local_hour >= hour_start and local_hour <= hour_end)
-    else:
-        return (local_hour >= hour_start and local_hour <= hour_end+24)
+    return hour_within_bounds(local_hour, hour_start, hour_end)
     
 def _get_temperature(ruuvitag_mac_address):
     logging.info(f'Using Ruuvi mac: {ruuvitag_mac_address}')
@@ -91,13 +96,25 @@ def print_current_temperature(ruuvitag_mac_address):
 
 def test():
     print('Running test')
+    assert(hour_within_bounds(3,2,4))
+    assert(hour_within_bounds(0,0,12))
+    assert(hour_within_bounds(0,0,0))
+    assert(hour_within_bounds(1,1,1))
+    assert(hour_within_bounds(2,1,1))
+    assert(hour_within_bounds(1,22,2))
+    assert(hour_within_bounds(23,22,2))
+    assert(hour_within_bounds(0,20,7))
+    assert(not hour_within_bounds(5,2,4))
+    assert(not hour_within_bounds(0,2,4))
+    assert(not hour_within_bounds(21,22,2))
+    assert(not hour_within_bounds(3,22,2))
+
     now_hour = datetime.now().hour
-    assert(not within_hour_bounds((now_hour+2)%24, (now_hour+3)%24))
-    assert(not within_hour_bounds((now_hour+2)%24, (now_hour+2)%24))
-    assert(within_hour_bounds(0, 23))
-    assert(within_hour_bounds(0, 0))
-    assert(within_hour_bounds(now_hour, now_hour))
-    assert(within_hour_bounds(now_hour, (now_hour+12)%24))
+    assert(not current_within_hour_bounds((now_hour+2)%24, (now_hour+3)%24))
+    assert(current_within_hour_bounds(0, 23))
+    assert(current_within_hour_bounds(0, 0))
+    assert(current_within_hour_bounds(now_hour, now_hour))
+    assert(current_within_hour_bounds(now_hour, (now_hour+12)%24))
 
 
 if __name__ == '__main__':
