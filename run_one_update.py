@@ -86,7 +86,7 @@ def run_one_update(temp_min, temp_max, ruuvitag_mac_address, kasa_plug_alias):
     return result
 
 def run_one_update_hour_bounds(hour_start, hour_end, temp_min, temp_max, ruuvitag_mac_address, kasa_plug_alias):
-    if within_hour_bounds(hour_start, hour_end):
+    if current_within_hour_bounds(hour_start, hour_end):
         return run_one_update(temp_min, temp_max, ruuvitag_mac_address, kasa_plug_alias)
     logging.info('Outside of hour bounds, not checking.')
     return None
