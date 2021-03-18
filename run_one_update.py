@@ -15,7 +15,7 @@ def hour_within_bounds(hour_target, hour_start, hour_end):
     if hour_end > hour_start:
         return (hour_target >= hour_start and hour_target <= hour_end)
     else:
-        return not (hour_target >= hour_end and hour_target <= hour_start)
+        return not (hour_target > hour_end and hour_target < hour_start)
 
 def current_within_hour_bounds(hour_start, hour_end):
     local_now = datetime.now()
@@ -103,6 +103,8 @@ def test():
     assert(hour_within_bounds(2,1,1))
     assert(hour_within_bounds(1,22,2))
     assert(hour_within_bounds(23,22,2))
+    assert(hour_within_bounds(22,22,2))
+    assert(hour_within_bounds(2,22,2))
     assert(hour_within_bounds(0,20,7))
     assert(not hour_within_bounds(5,2,4))
     assert(not hour_within_bounds(0,2,4))
