@@ -85,14 +85,31 @@ def run_one_update(temp_min, temp_max, ruuvitag_mac_address, kasa_plug_alias):
     logging.info('Done')
     return result
 
+# returns (should_run, result)
 def run_one_update_hour_bounds(hour_start, hour_end, temp_min, temp_max, ruuvitag_mac_address, kasa_plug_alias):
+    should_run = False
     if current_within_hour_bounds(hour_start, hour_end):
-        return run_one_update(temp_min, temp_max, ruuvitag_mac_address, kasa_plug_alias)
+        should_run = True
+        result = run_one_update(temp_min, temp_max, ruuvitag_mac_address, kasa_plug_alias)
+        return (should_run, result)
     logging.info('Outside of hour bounds, not checking.')
-    return None
+    return should_run, None
 
 def print_current_temperature(ruuvitag_mac_address):
     _, temp_f = get_temperature(ruuvitag_mac_address)
+
+
+# returns (should_run, result)
+def run_one_thermostat_entry(thermostat_entry, ruuvitag_mac_address, kasa_plug_alias):
+    temp_min = thermostat_entry['temp_min_f']
+    temp_max = thermostat_entry['temp_max_f']
+    hour_start = thermostat_entry['hour_start']
+    hour_end = thermostat_entry['hour_end']
+    print('Running in bounds: {} - {}'.format(hour_start, hour_end))
+    print('Running with min max range: {} - {}'.format(temp_min, temp_max))
+    should_run, result = run_one_update_hour_bounds(hour_start, hour_end, temp_min, temp_max, ruuvitag_mac_address, kasa_plug_alias)
+    print(should_run, result)
+    return should_run, result
 
 def test():
     print('Running test')
@@ -119,7 +136,8 @@ def test():
     assert(current_within_hour_bounds(now_hour, (now_hour+12)%24))
 
 
-if __name__ == '__main__':
+
+def main():
     logging.basicConfig(level=logging.INFO, format='%(asctime)s %(filename)s: %(message)s')
 
     if len(sys.argv) <2:
@@ -134,17 +152,19 @@ if __name__ == '__main__':
     #if len(sys.argv) > 2:
     #    temp_min = float(sys.argv[2])
 
-    thermostat_data = json.loads(open(sys.argv[1]).read())
-    print(thermostat_data)
-    temp_min = thermostat_data['temp_min_f']
-    temp_max = thermostat_data['temp_max_f']
-    hour_start = thermostat_data['hour_start']
-    hour_end = thermostat_data['hour_end']
-    print('Running in bounds: {} - {}'.format(hour_start, hour_end))
-    print('Running with min max range: {} - {}'.format(temp_min, temp_max))
     conf = json.loads(open('conf.json').read())
     ruuvitag_mac_address = conf['ruuvitag_mac_address']
     kasa_plug_alias = conf['kasa_plug_alias']
 
-    result = run_one_update_hour_bounds(hour_start, hour_end, temp_min, temp_max, ruuvitag_mac_address, kasa_plug_alias)
-    print(result)
+    thermostat_data = json.loads(open(sys.argv[1]).read())
+    print(thermostat_data)
+    for thermostat_entry in thermostat_data:
+        should_run, result = run_one_thermostat_entry(thermostat_entry, ruuvitag_mac_address, kasa_plug_alias)
+        if should_run:
+            break
+        else:
+            print(result)
+
+
+if __name__ == '__main__':
+    main()
